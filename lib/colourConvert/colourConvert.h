@@ -22,4 +22,7 @@ double CIELAB_DELTA_E_76(double L1, double a1, double b1,
 
 double CIELAB_DELTA_E_94(double L1, double a1, double b1,
         double L2, double a2, double b2);
+
+double CIELAB_DELTA_E_2000(double L1, double a1, double b1,
+        double L2, double a2, double b2);
 #endif // COLOUR_CONVERT_H

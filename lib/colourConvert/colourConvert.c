@@ -1,6 +1,7 @@
 #include "colourConvert.h"
 #include "yy_color_converter.h"
 #include <stdbool.h>
+#include <math.h>
 
 void CIELCHab2RGB(double l, double c, double h,
         double* R, double* G, double* B)
@@ -65,6 +66,66 @@ double CIELAB_DELTA_E_94(double L_1, double a_1, double b_1,
     double S_H = 1 + K_2 * C_1;
 
     return sqrt(pow(delta_L/(K_L*S_L), 2) + pow(delta_C/(K_C*S_C), 2) + delta_H_pow2/pow((K_H*S_H), 2));
+}
+
+
+#define deg2Rad(deg) ((deg) * M_PI / 180.0)
+#define rad2Deg(rad) ((rad) * 180.0 / M_PI)
+
+// http://www.brucelindbloom.com/index.html?ColorDifferenceCalc.html
+double CIELAB_DELTA_E_2000(double L_1, double a_1, double b_1,
+        double L_2, double a_2, double b_2)
+{
+    double L_bar_prime = (L_1 + L_2) / 2;
+    double C_1 = sqrt(pow(a_1, 2) + pow(b_1, 2));
+    double C_2 = sqrt(pow(a_2, 2) + pow(b_2, 2));
+    double C_bar = (C_1 + C_2) / 2;
+    double G = 1/2 * (1 - sqrt(pow(C_bar, 7)/(pow(C_bar, 7) + pow(25, 7))));
+    double a_prime_1 = a_1 * (1 + G);
+    double a_prime_2 = a_2 * (1 + G);
+    double C_prime_1 = sqrt(pow(a_prime_1, 2) + pow(b_1, 2));
+    double C_prime_2 = sqrt(pow(a_prime_2, 2) + pow(b_2, 2));
+    double C_bar_prime = (C_prime_1 + C_prime_2)/2;
+    double tmp = rad2Deg(atan2(b_1, a_prime_1));
+    double h_prime_1 = tmp >= 0 ? tmp : tmp + 360;
+    tmp = rad2Deg(atan2(b_2, a_prime_2));
+    double h_prime_2 = tmp >= 0 ? tmp : tmp + 360;
+    double H_bar_prime = fabs(h_prime_1 - h_prime_2) > 180
+        ? (h_prime_1 + h_prime_2 + 360)/2
+        : (h_prime_1 + h_prime_2)/2;
+    double T = 1
+        - 0.17 * cos(deg2Rad(H_bar_prime -30))
+        + 0.24 * cos(deg2Rad(2 * H_bar_prime))
+        + 0.32 * cos(deg2Rad(3 * H_bar_prime + 6))
+        - 0.20 * cos(deg2Rad(4 * H_bar_prime - 63));
+    double delta_h_prime = h_prime_2 - h_prime_1 - 360;
+    if(fabs(h_prime_1 - h_prime_2) <= 180) {
+        delta_h_prime = h_prime_2 - h_prime_1;
+    } else if (fabs(h_prime_2 - h_prime_1) > 180 && h_prime_2 <= h_prime_1) {
+        delta_h_prime = h_prime_2 - h_prime_1 + 360;
+    }
+    double delta_L_prime = L_2 - L_1;
+    double delta_C_prime = C_prime_2 - C_prime_1;
+    double delta_H_prime = 2 * sqrt(C_prime_1 * C_prime_2) * sin(deg2Rad(delta_h_prime/2));
+    double S_L = 1 + (0.015*pow(L_bar_prime - 50, 2))/sqrt(20 + pow(L_bar_prime - 50, 2));
+    double S_C = 1 + 0.045 * C_bar_prime;
+    double S_H = 1 + 0.015 * C_bar_prime * T;
+    double delta_theta = 30 * exp(-1 * pow((H_bar_prime - 275)/25, 2));
+    double R_C = 2 * sqrt(pow(C_bar_prime, 7)/(pow(C_bar_prime, 7) + pow(25, 7)));
+    double R_T = -1 * R_C * sin(deg2Rad(2 * delta_theta));
+    double K_L = 1;
+    double K_C = 1;
+    double K_H = 1;
+
+    return sqrt(
+              pow(delta_L_prime/(K_L * S_L), 2)
+            + pow(delta_C_prime/(K_C * S_C), 2)
+            + pow(delta_H_prime/(K_H * S_H), 2)
+            + R_T
+            * (delta_C_prime/(K_C * S_C))
+            * (delta_H_prime/(K_H * S_H)));
+
+
 }
 
 void CIELCHab2RGB_uint8_t(double l, double c, double h,

@@ -87,6 +87,11 @@ void test_CIELAB_DELTA_E_94(void) {
             delta_E_L_2, delta_E_a_2, delta_E_b_2);
     TEST_ASSERT_EQUAL_FLOAT(delta_E_CIE94_Graphic_Arts, delta_e);
 }
+void test_CIELAB_DELTA_E_2000(void) {
+    double delta_e = CIELAB_DELTA_E_2000(delta_E_L_1, delta_E_a_1, delta_E_b_1,
+            delta_E_L_2, delta_E_a_2, delta_E_b_2);
+    TEST_ASSERT_EQUAL_FLOAT(delta_E_CIE2000_1_1_1, delta_e);
+}
 
 int main()
 {
@@ -98,6 +103,7 @@ int main()
     RUN_TEST(test_CIELCHab2RGB_purple_uint8_t);
     RUN_TEST(test_CIELAB_DELTA_E_76);
     RUN_TEST(test_CIELAB_DELTA_E_94);
+    RUN_TEST(test_CIELAB_DELTA_E_2000);
 
     UNITY_END();
 }

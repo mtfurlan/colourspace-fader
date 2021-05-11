@@ -26,7 +26,7 @@ void setup()
 }
 
 
-#define MIN_COLOUR_DIFF .42
+#define MIN_COLOUR_DIFF 1
 #define HUE_INCREMENT .01
 void incrementHue(double* R, double* G, double* B)
 {
@@ -56,18 +56,18 @@ void loop()
     do {
         incrementHue(&R, &G, &B);
         RGB2CIELab(R, G, B, &next_L, &next_a, &next_b);
-    } while(CIELAB_DELTA_E_94(last_L, last_a, last_b,
-                next_L, next_a, next_b) < MIN_COLOUR_DIFF)
+    } while(CIELAB_DELTA_E_2000(last_L, last_a, last_b,
+                next_L, next_a, next_b) < MIN_COLOUR_DIFF);
 
     last_L = next_L;
     last_a = next_a;
     last_b = next_b;
 
 
-    //static char buf[64];
-    //sprintf(buf, "CIElch: %f, %f, %f\r\nRGB: %03d, %03d, %03d",
-    //        l, c, h, clampConvert(R), clampConvert(G), clampConvert(B));
-    //Serial.println(buf);
+    static char buf[64];
+    sprintf(buf, "CIELab: %f, %f, %f\r\nRGB: %03d, %03d, %03d",
+            last_L, last_a, last_b, clampConvert(R), clampConvert(G), clampConvert(B));
+    Serial.println(buf);
 
     fill_solid(leds, NUM_LEDS, CRGB(clampConvert(R), clampConvert(G), clampConvert(B)));
     FastLED.show();
