@@ -11,7 +11,7 @@ extern "C" {
 
 #define LED_PIN     D4
 
-#define DATA_PIN            D4
+#define DATA_PIN            D2
 #define NUM_LEDS            3
 #define LED_TYPE            WS2812B
 #define COLOR_ORDER         GRB
@@ -27,12 +27,12 @@ void setup()
 
 
 #define MIN_COLOUR_DIFF 1
-#define HUE_INCREMENT .01
+#define HUE_INCREMENT .1
+double h = 0;
 void incrementHue(double* R, double* G, double* B)
 {
     static double l = 10;
     static double c = 100;
-    static double h = 0;
 
     h += HUE_INCREMENT;
     if(h > 360) {
@@ -65,8 +65,8 @@ void loop()
 
 
     static char buf[64];
-    sprintf(buf, "CIELab: %f, %f, %f\r\nRGB: %03d, %03d, %03d",
-            last_L, last_a, last_b, clampConvert(R), clampConvert(G), clampConvert(B));
+    sprintf(buf, "h: %3.6f\tCIELab: %3.6f,\t%3.6f,\t%3.6f\tRGB: %3d, %3d, %3d",
+            h, last_L, last_a, last_b, clampConvert(R), clampConvert(G), clampConvert(B));
     Serial.println(buf);
 
     fill_solid(leds, NUM_LEDS, CRGB(clampConvert(R), clampConvert(G), clampConvert(B)));
