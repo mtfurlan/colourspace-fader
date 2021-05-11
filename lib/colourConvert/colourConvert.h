@@ -5,21 +5,21 @@
 
 #include <stdint.h>
 
-void CIELCHab2RGB(CGFloat l, CGFloat c, CGFloat h,
-        CGFloat* R, CGFloat* G, CGFloat* B);
+void CIELCHab2RGB(double l, double c, double h,
+        double* R, double* G, double* B);
 
-void RGB2CIELab(CGFloat R, CGFloat G, CGFloat B,
-                CGFloat* L, CGFloat* a, CGFloat* b);
+void RGB2CIELab(double R, double G, double B,
+                double* L, double* a, double* b);
 
-void CIELCHab2RGB_uint8_t(CGFloat l, CGFloat c, CGFloat h,
+void CIELCHab2RGB_uint8_t(double l, double c, double h,
         uint8_t* r, uint8_t* g, uint8_t* b);
 
 // take 0-1 float, return 0-255
-uint8_t clampConvert(CGFloat n);
+uint8_t clampConvert(double n);
 
-CGFloat CIELAB_DELTA_E_76(CGFloat L1, CGFloat a1, CGFloat b1,
-        CGFloat L2, CGFloat a2, CGFloat b2);
+double CIELAB_DELTA_E_76(double L1, double a1, double b1,
+        double L2, double a2, double b2);
 
-CGFloat CIELAB_DELTA_E_94(CGFloat L1, CGFloat a1, CGFloat b1,
-        CGFloat L2, CGFloat a2, CGFloat b2);
+double CIELAB_DELTA_E_94(double L1, double a1, double b1,
+        double L2, double a2, double b2);
 #endif // COLOUR_CONVERT_H
