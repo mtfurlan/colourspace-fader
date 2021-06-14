@@ -47,7 +47,7 @@ void test_CIELCHab2RGB_blue(void) {
     TEST_ASSERT_EQUAL_FLOAT(B, round(_B));
 }
 
-void test_CIELCHab2RGB_purple_uint8_t(void) {
+void test_CIELCHab2RGB_uint8_t_purple(void) {
     double l = 32.9025;
     double c = 63.7335;
     double h = 312.2874;
@@ -59,6 +59,20 @@ void test_CIELCHab2RGB_purple_uint8_t(void) {
     TEST_ASSERT_EQUAL(R, _R);
     TEST_ASSERT_EQUAL(G, _G);
     TEST_ASSERT_EQUAL(B, _B);
+}
+
+void test_RGB2CIELab_uint8_t_purple(void) {
+    double R = 102;
+    double G = 51;
+    double B = 153;
+    double L = 32.90186; // TODO: actual 32.9025;
+    double a = 42.89232; // TODO: actual 42.8831;
+    double b = -47.15767;// TODO: actual -47.1486;
+    double _L, _a, _b;
+    RGB2CIELab_uint8_t(R, G, B, &_L, &_a, &_b);
+    TEST_ASSERT_EQUAL_FLOAT(L, _L);
+    TEST_ASSERT_EQUAL_FLOAT(a, _a);
+    TEST_ASSERT_EQUAL_FLOAT(b, _b);
 }
 
 
@@ -93,6 +107,98 @@ void test_CIELAB_DELTA_E_2000(void) {
     TEST_ASSERT_EQUAL_FLOAT(delta_E_CIE2000_1_1_1, delta_e);
 }
 
+void test_fade_attempt1(void)
+{
+    const double lightness = 50;
+    const double chroma = 100;
+    const double min_colour_diff = .001;
+    const double hue_increment = .01;
+
+
+    double hue = 0;
+    double last_hue;
+    double last_L = 0;
+    double last_a = 0;
+    double last_b = 0;
+
+    // loop till hue wraps
+    do {
+        double next_L;
+        double next_a;
+        double next_b;
+
+        uint8_t R, G, B;
+
+        last_hue = hue;
+        //while we are still too close to the last colour, keep going
+        do {
+            hue += hue_increment;
+            if(hue > 360) {
+                hue = 0;
+            }
+            CIELCHab2RGB_uint8_t(lightness, chroma, hue, &R, &G, &B);
+            RGB2CIELab_uint8_t(R, G, B, &next_L, &next_a, &next_b);
+        } while(CIELAB_DELTA_E_2000(last_L, last_a, last_b,
+                    next_L, next_a, next_b) < min_colour_diff);
+
+        last_L = next_L;
+        last_a = next_a;
+        last_b = next_b;
+
+
+        //printf("%3.4f, %3d, %3d, %3d\n", hue, R, G, B);
+    } while(hue > last_hue);
+}
+
+void test_fade_attempt2(void)
+{
+    const double saturation = 1;
+    const double lightness = .5;
+    const double min_colour_diff = .001;
+    const double hue_increment = .01;
+
+    double hue = 0;
+    double last_L = 0;
+    double last_a = 0;
+    double last_b = 0;
+    double last_hue;
+
+    // loop till hue wraps
+    do {
+        double next_L;
+        double next_a;
+        double next_b;
+
+        double R_f, G_f, B_f;
+        uint8_t R, G, B;
+
+        last_hue = hue;
+        //while we are still too close to the last colour, keep going
+        do {
+            //incremenmt hue
+            hue += hue_increment;
+            if(hue > 360) {
+                hue = 0;
+            }
+            HSL2RGB(hue, saturation, lightness, &R_f, &G_f, &B_f);
+            R = clampConvert(R_f);
+            G = clampConvert(G_f);
+            B = clampConvert(B_f);
+
+
+            RGB2CIELab_uint8_t(R, G, B, &next_L, &next_a, &next_b);
+        } while(CIELAB_DELTA_E_2000(last_L, last_a, last_b,
+                    next_L, next_a, next_b) < min_colour_diff);
+
+        last_L = next_L;
+        last_a = next_a;
+        last_b = next_b;
+
+
+        //printf("%3.4f, %3d, %3d, %3d\n", hue, R, G, B);
+    } while(hue > last_hue);
+}
+
 int main()
 {
     UNITY_BEGIN();
@@ -100,10 +206,14 @@ int main()
     RUN_TEST(test_CIELCHab2RGB_red);
     RUN_TEST(test_CIELCHab2RGB_green);
     RUN_TEST(test_CIELCHab2RGB_blue);
-    RUN_TEST(test_CIELCHab2RGB_purple_uint8_t);
+    RUN_TEST(test_CIELCHab2RGB_uint8_t_purple);
+    RUN_TEST(test_RGB2CIELab_uint8_t_purple);
     RUN_TEST(test_CIELAB_DELTA_E_76);
     RUN_TEST(test_CIELAB_DELTA_E_94);
     RUN_TEST(test_CIELAB_DELTA_E_2000);
+
+    RUN_TEST(test_fade_attempt1);
+    RUN_TEST(test_fade_attempt2);
 
     UNITY_END();
 }

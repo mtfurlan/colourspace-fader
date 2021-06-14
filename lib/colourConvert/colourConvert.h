@@ -10,6 +10,8 @@ void CIELCHab2RGB(double l, double c, double h,
 
 void RGB2CIELab(double R, double G, double B,
                 double* L, double* a, double* b);
+void RGB2CIELab_uint8_t(uint8_t R, uint8_t G, uint8_t B,
+                double* L, double* a, double* b);
 
 void CIELCHab2RGB_uint8_t(double l, double c, double h,
         uint8_t* r, uint8_t* g, uint8_t* b);
