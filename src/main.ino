@@ -25,50 +25,50 @@ void setup()
         .setCorrection( TypicalLEDStrip );
 }
 
-
-#define MIN_COLOUR_DIFF 1
-#define HUE_INCREMENT .1
-double h = 0;
-void incrementHue(double* R, double* G, double* B)
-{
-    static double l = 10;
-    static double c = 100;
-
-    h += HUE_INCREMENT;
-    if(h > 360) {
-        h = 0;
-    }
-    CIELCHab2RGB(l, c, h,
-            R, G, B);
-}
 void loop()
 {
-    static double last_L;
-    static double last_a;
-    static double last_b;
+    const static double saturation = 1;
+    const static double lightness = .5;
+    const static double min_colour_diff = .01;
+    const static double hue_increment = .01;
+
+    double hue = 0;
+    static double last_L = 0;
+    static double last_a = 0;
+    static double last_b = 0;
+
     double next_L;
     double next_a;
     double next_b;
 
-    double R, G, B;
+    double R_f, G_f, B_f;
+    uint8_t R, G, B;
 
     //while we are still too close to the last colour, keep going
     do {
-        incrementHue(&R, &G, &B);
-        RGB2CIELab(R, G, B, &next_L, &next_a, &next_b);
+        //incremenmt hue
+        hue += hue_increment;
+        if(hue > 360) {
+            hue = 0;
+        }
+        HSL2RGB(hue, saturation, lightness, &R_f, &G_f, &B_f);
+        R = clampConvert(R_f);
+        G = clampConvert(G_f);
+        B = clampConvert(B_f);
+
+
+        RGB2CIELab_uint8_t(R, G, B, &next_L, &next_a, &next_b);
     } while(CIELAB_DELTA_E_2000(last_L, last_a, last_b,
-                next_L, next_a, next_b) < MIN_COLOUR_DIFF);
+                next_L, next_a, next_b) < min_colour_diff);
 
     last_L = next_L;
     last_a = next_a;
     last_b = next_b;
 
 
-    static char buf[64];
-    sprintf(buf, "h: %3.6f\tCIELab: %3.6f,\t%3.6f,\t%3.6f\tRGB: %3d, %3d, %3d",
-            h, last_L, last_a, last_b, clampConvert(R), clampConvert(G), clampConvert(B));
-    Serial.println(buf);
-
-    fill_solid(leds, NUM_LEDS, CRGB(clampConvert(R), clampConvert(G), clampConvert(B)));
+    static char buf[512];
+    sprintf(buf, "%3.4f, %3d, %3d, %3d\n", hue, R, G, B);
+    Serial.print(buf);
+    fill_solid(leds, NUM_LEDS, CRGB(R, G, B));
     FastLED.show();
 }
