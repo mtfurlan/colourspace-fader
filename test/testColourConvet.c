@@ -107,11 +107,11 @@ void test_CIELAB_DELTA_E_2000(void) {
     TEST_ASSERT_EQUAL_FLOAT(delta_E_CIE2000_1_1_1, delta_e);
 }
 
-void test_fade_attempt1(void)
+void test_fade_attempt_CIELCHab_sweep_H(void)
 {
-    const double lightness = 50;
+    const double lightness = 70;
     const double chroma = 100;
-    const double min_colour_diff = .001;
+    const double min_colour_diff = 1;
     const double hue_increment = .01;
 
 
@@ -120,6 +120,8 @@ void test_fade_attempt1(void)
     double last_L = 0;
     double last_a = 0;
     double last_b = 0;
+
+    printf("PLOTTITLE: CIELCh hue sweep with min %.01f ΔE, L=%.01f C=%.01f\n", min_colour_diff, lightness, chroma);
 
     // loop till hue wraps
     do {
@@ -146,15 +148,16 @@ void test_fade_attempt1(void)
         last_b = next_b;
 
 
-        //printf("%3.4f, %3d, %3d, %3d\n", hue, R, G, B);
+        printf("PLOTDATA: %3.4f, %3d, %3d, %3d\n", hue, R, G, B);
     } while(hue > last_hue);
 }
 
-void test_fade_attempt2(void)
+void test_fade_attempt_HSL(void)
 {
+    //HSL is 0-1
     const double saturation = 1;
     const double lightness = .5;
-    const double min_colour_diff = .001;
+    const double min_colour_diff = 3;
     const double hue_increment = .01;
 
     double hue = 0;
@@ -163,6 +166,7 @@ void test_fade_attempt2(void)
     double last_b = 0;
     double last_hue;
 
+    printf("PLOTTITLE: HSL hue sweep with min %.01f ΔE, S=%.01f L=%.01f\n", min_colour_diff, saturation, lightness);
     // loop till hue wraps
     do {
         double next_L;
@@ -195,7 +199,7 @@ void test_fade_attempt2(void)
         last_b = next_b;
 
 
-        //printf("%3.4f, %3d, %3d, %3d\n", hue, R, G, B);
+        printf("PLOTDATA: %3.4f, %3d, %3d, %3d\n", hue, R, G, B);
     } while(hue > last_hue);
 }
 
@@ -212,8 +216,11 @@ int main()
     RUN_TEST(test_CIELAB_DELTA_E_94);
     RUN_TEST(test_CIELAB_DELTA_E_2000);
 
-    RUN_TEST(test_fade_attempt1);
-    RUN_TEST(test_fade_attempt2);
+    /*
+    RUN_TEST(test_fade_attempt_CIELCHab_sweep_H);
+    /*/
+    RUN_TEST(test_fade_attempt_HSL);
+    //*/
 
     UNITY_END();
 }
