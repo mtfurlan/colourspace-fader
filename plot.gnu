@@ -5,7 +5,9 @@
 #set term svg
 #set output "plot.svg"
 
-set multiplot layout 2, 1 title "`head -1 plotData/title`" font ",14"
+inputFile = "plotData/rgb.csv"
+titleFile = "plotData/title"
+set multiplot layout 2, 1 title system("cat ".titleFile) font ",14"
 
 set lmargin at screen 0.05
 
@@ -14,26 +16,34 @@ set yrange [0:350]
 # don't add extra space to end of plot
 set autoscale xfix
 
-plot "plotData/rgb.csv" using 1:2 title 'red' with lines linecolor "red", \
-     "plotData/rgb.csv" using 1:3 title 'green' with lines linecolor "green", \
-     "plotData/rgb.csv" using 1:4 title 'blue' with lines linecolor "blue"
+plot inputFile using 1:2 title 'red' with lines linecolor "red", \
+     inputFile using 1:3 title 'green' with lines linecolor "green", \
+     inputFile using 1:4 title 'blue' with lines linecolor "blue"
 
-# magic to plot colors
-set style function pm3d
-set view map scale 1
-set format cb "%3.1f"
+# https://stackoverflow.com/a/69563403/2423187
+# convert file of numerical RGB components (0-255) to 24-bit hex representation
+# $RGBtable will be a datablock containing Ncol string values
+set table $RGBtable
+plot inputFile using (sprintf("0x%02x%02x%02x", $2, $3, $4)) with table
+unset table
+Ncol = |$RGBtable|
 
 unset colorbox
-
-set palette file 'plotData/rgb.csv' using (($2/255)):(($3/255)):(($4)/255)
-set palette maxcolors system("wc -l plotData/rgb.csv | sed 's/ .*//'")
-
 unset key
-unset ytics
-unset xtics
+#unset ytics
+#unset xtics
 
-g(x)=x
-splot g(x)
+round(x) = x > 0 ? 1 * floor(real(x)/1+0.5) : 1 * ceil(real(x)/1-0.5)
+bigger(a, b) = a > b ? a : b
+set view map
+set yrange [0:1]
+# If samples is Ncol, it looks wierd/misses stuff at Ncol=4ish
+# Dunno why, this works, whatever.
+set samples bigger(1000,Ncol*10)
+# we sample between .5 and Ncol + .4999, and round the values
+# so from .5 to 1.5 is color 1, from 1.5 to 2.5 is color 2, etc
+set urange [.5:Ncol+.4999]
+splot '++' using 1:2:(0):(int($RGBtable[round($1)])) with pm3d lc rgb variable
 
 unset multiplot
 
